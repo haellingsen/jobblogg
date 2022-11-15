@@ -1,3 +1,4 @@
+from zoneinfo import ZoneInfo
 from datetime import datetime, date, timedelta
 import decimal
 from distutils.log import debug
@@ -93,6 +94,17 @@ def get_last_specific_weekday(weekday_int):
 def get_previous_week_start():
   return get_last_specific_weekday(0)
 
+
+def add_joblog_entry(log_file, activity_description):
+  date_format = '%Y-%m-%dT%H:%M:%S%z'
+
+  with open(log_file, encoding='utf-8', mode='a') as f:
+    log_time = datetime.now(ZoneInfo('Europe/Oslo')).isoformat(timespec='seconds')
+    log_entry = f"\n{log_time},{activity_description}"
+    print(log_entry)
+    f.write(log_entry)
+
+
 def main():
   jobb_logg_file_name=r'C:\Users\HaraldEllingsen\iCloudDrive\iCloud~is~workflow~my~workflows\jobb-logg2.txt'
   entry_list = parse_jobblogg(jobb_logg_file_name, with_comments=True)
@@ -104,18 +116,27 @@ def main():
   print("Processing: " + jobb_logg_file_name)
   
   while True:
-    print(f"Showing entries from {date_from} to {date_to}")
-    result = input("Type 'n' to jump one week forward, 'p' to jump back one week, enter to continue: ")
-    if result == 'n':
-      date_from = date_from + timedelta(days=7)
-      date_to = date_from + timedelta(days=7)
-    elif result == 'p':
-      date_from = date_from + timedelta(days=-7)
-      date_to = date_from + timedelta(days=-7)
-    elif not result:
-      break
-    
-  print_filtered_entries(format_entries(entry_list), date_from, date_to, csv=True)
+
+    msg_entry = "Press any key to add entries, s to show entries from the log: "
+    user_choice = input(msg_entry)
+
+    while not user_choice:
+      add_joblog_entry(jobb_logg_file_name, input("Describe what you are doing now:\n"))
+
+    if user_choice == 's':
+      print(f"Showing entries from {date_from} to {date_to}")
+      result = input("Type 'n' to jump one week forward, 'p' to jump back one week, enter to continue: ")
+      if result == 'n':
+        date_from = date_from + timedelta(days=7)
+        date_to = date_from + timedelta(days=7)
+      elif result == 'p':
+        date_from = date_from + timedelta(days=-7)
+        date_to = date_from + timedelta(days=-7)
+      elif not result:
+        break
+
+      print_filtered_entries(format_entries(entry_list), date_from, date_to, csv=True)
   
 if __name__ == "__main__":
   main()
+  input("Press any key to quit.")
