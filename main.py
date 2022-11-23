@@ -112,7 +112,7 @@ def main():
   date_from = get_previous_week_start()
 
   date_to = date_from + timedelta(days=7)
-  
+
   print("Processing: " + jobb_logg_file_name)
   
   while True:
@@ -133,10 +133,8 @@ def main():
         date_from = date_from + timedelta(days=-7)
         date_to = date_from + timedelta(days=-7)
       elif not result:
-        break
+        print_filtered_entries(format_entries(entry_list), date_from, date_to, csv=True)
 
-      print_filtered_entries(format_entries(entry_list), date_from, date_to, csv=True)
-  
 if __name__ == "__main__":
   main()
   input("Press any key to quit.")
