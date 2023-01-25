@@ -1,7 +1,55 @@
+from getch import getch
 from zoneinfo import ZoneInfo
 from datetime import datetime, date, timedelta
 import decimal
 from distutils.log import debug
+
+
+def make_search_list_from_csv(filename, column_index=1):
+    column = []
+    with open(filename, 'r', encoding='utf-8') as csv_file:
+        csv_reader = csv.reader(csv_file)
+        for row in csv_reader:
+            column.append(row[column_index])
+    return column
+
+def input_with_search(column_list):
+    user_input = ""
+    previus_user_input = ""
+    print("Enter a letter to search.")
+    suggestion_number = 0
+    try:
+        while True:
+            print(f"User input: {user_input}")
+            suggestions = [x for x in column_list if x.upper().startswith(user_input.upper()) and user_input][:3]
+            for suggestion in suggestions:
+                print(suggestion)
+            key = getch()
+            #print(f"key: {key}")
+            if key == b'\x08': #backspace key
+                user_input = user_input[:-1]
+            elif key in b'\x03\x04': #ctrl-c or ctrl-d
+                break
+            elif key in b'\r\n':
+                return user_input
+                break
+            elif suggestions and key == b'\t': #tab key
+                while key == b'\t':
+                    if suggestion_number > len(suggestions)-1:
+                        suggestion_number = 0
+                    user_input = suggestions[suggestion_number]
+                    suggestion_number += 1
+                    print(f"User input: {user_input}")
+                    key = getch()
+
+                if key in b'\r\n':
+                    return user_input
+                    break
+            else:
+                user_input += key.decode("utf-8")
+                previus_user_input = user_input
+    except KeyboardInterrupt:
+        print("Exiting...")
 
 def parse_jobblogg(file_name, with_comments=True):
   with open(file_name, encoding='utf-8', mode='r') as f:
@@ -108,7 +156,8 @@ def add_joblog_entry(log_file, activity_description):
 def main():
   jobb_logg_file_name=r'C:\Users\HaraldEllingsen\iCloudDrive\iCloud~is~workflow~my~workflows\jobb-logg2.txt'
   entry_list = parse_jobblogg(jobb_logg_file_name, with_comments=True)
-  
+  description_list = list(map(lambda x: x.get('description'), entry_list))
+
   date_from = get_previous_week_start()
 
   date_to = date_from + timedelta(days=7)
@@ -121,7 +170,7 @@ def main():
     user_choice = input(msg_entry)
 
     while not user_choice:
-      add_joblog_entry(jobb_logg_file_name, input("Describe what you are doing now:\n"))
+      add_joblog_entry(jobb_logg_file_name, input_with_search(description_list))
 
     if user_choice == 's':
       print(f"Showing entries from {date_from} to {date_to}")
