@@ -1,4 +1,4 @@
-from getch import getch
+from msvcrt import getch
 from zoneinfo import ZoneInfo
 from datetime import datetime, date, timedelta
 import decimal
